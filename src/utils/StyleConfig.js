@@ -27,6 +27,7 @@ export const State = {
   WARNING: 'warning',
   DANGER: 'danger',
   INFO: 'info',
+  DEFAULT: 'default',
 };
 
 export const Style = {
