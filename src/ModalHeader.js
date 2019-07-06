@@ -1,14 +1,15 @@
 import classNames from 'classnames';
-import React from 'react';
 import PropTypes from 'prop-types';
+import React, { useContext } from 'react';
+import useEventCallback from '@restart/hooks/useEventCallback';
 
-import { bsClass, getClassSet, splitBsProps } from './utils/bootstrapUtils';
-import createChainedFunction from './utils/createChainedFunction';
+import { useBootstrapPrefix } from './ThemeProvider';
 import CloseButton from './CloseButton';
-
-// TODO: `aria-label` should be `closeLabel`.
+import ModalContext from './ModalContext';
 
 const propTypes = {
+  bsPrefix: PropTypes.string,
+
   /**
    * Provides an accessible label for the close
    * button. It is used for Assistive Technology when the label text is not
@@ -34,49 +35,42 @@ const defaultProps = {
   closeButton: false,
 };
 
-const contextTypes = {
-  $bs_modal: PropTypes.shape({
-    onHide: PropTypes.func,
-  }),
-};
-
-class ModalHeader extends React.Component {
-  render() {
-    const {
+const ModalHeader = React.forwardRef(
+  (
+    {
+      bsPrefix,
       closeLabel,
       closeButton,
       onHide,
       className,
       children,
       ...props
-    } = this.props;
+    },
+    ref,
+  ) => {
+    bsPrefix = useBootstrapPrefix(bsPrefix, 'modal-header');
 
-    const modal = this.context.$bs_modal;
+    const context = useContext(ModalContext);
 
-    const [bsProps, elementProps] = splitBsProps(props);
-
-    const classes = getClassSet(bsProps);
+    const handleClick = useEventCallback(() => {
+      if (context) context.onHide();
+      if (onHide) onHide();
+    });
 
     return (
-      <div
-        {...elementProps}
-        className={classNames(className, classes)}
-      >
-        {closeButton && (
-          <CloseButton
-            label={closeLabel}
-            onClick={createChainedFunction(modal && modal.onHide, onHide)}
-          />
-        )}
-
+      <div ref={ref} {...props} className={classNames(className, bsPrefix)}>
         {children}
+
+        {closeButton && (
+          <CloseButton label={closeLabel} onClick={handleClick} />
+        )}
       </div>
     );
-  }
-}
+  },
+);
 
+ModalHeader.displayName = 'ModalHeader';
 ModalHeader.propTypes = propTypes;
 ModalHeader.defaultProps = defaultProps;
-ModalHeader.contextTypes = contextTypes;
 
-export default bsClass('modal-header', ModalHeader);
+export default ModalHeader;

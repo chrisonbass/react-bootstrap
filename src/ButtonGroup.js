@@ -1,61 +1,81 @@
 import classNames from 'classnames';
 import React from 'react';
 import PropTypes from 'prop-types';
-import all from 'prop-types-extra/lib/all';
 
-import Button from './Button';
-import { bsClass, getClassSet, prefix, splitBsProps }
-  from './utils/bootstrapUtils';
+import { useBootstrapPrefix } from './ThemeProvider';
 
 const propTypes = {
-  vertical: PropTypes.bool,
-  justified: PropTypes.bool,
+  /**
+   * @default 'btn-group'
+   */
+  bsPrefix: PropTypes.string,
 
   /**
-   * Display block buttons; only useful when used with the "vertical" prop.
-   * @type {bool}
+   * Sets the size for all Buttons in the group.
+   *
+   * @type ('sm'|'lg')
    */
-  block: all(
-    PropTypes.bool,
-    ({ block, vertical }) => (
-      block && !vertical ?
-        new Error('`block` requires `vertical` to be set to have any effect') :
-        null
-    ),
-  ),
+  size: PropTypes.string,
+
+  /** Make the set of Buttons appear vertically stacked. */
+  vertical: PropTypes.bool,
+
+  /**
+   * Display as a button toggle group.
+   *
+   * (Generally it's better to use `ToggleButtonGroup` directly)
+   */
+  toggle: PropTypes.bool,
+
+  /**
+   * An ARIA role describing the button group. Usually the default
+   * "group" role is fine. An `aria-label` or `aria-labelledby`
+   * prop is also recommended.
+   */
+  role: PropTypes.string,
+
+  as: PropTypes.elementType,
 };
 
 const defaultProps = {
-  block: false,
-  justified: false,
   vertical: false,
+  toggle: false,
+  role: 'group',
 };
 
-class ButtonGroup extends React.Component {
-  render() {
-    const { block, justified, vertical, className, ...props } = this.props;
-    const [bsProps, elementProps] = splitBsProps(props);
+const ButtonGroup = React.forwardRef((props, ref) => {
+  const {
+    bsPrefix,
+    size,
+    toggle,
+    vertical,
+    className,
+    // Need to define the default "as" during prop destructuring to be compatible with styled-components github.com/react-bootstrap/react-bootstrap/issues/3595
+    as: Component = 'div',
+    ...rest
+  } = props;
 
-    const classes = {
-      ...getClassSet(bsProps),
-      [prefix(bsProps)]: !vertical,
-      [prefix(bsProps, 'vertical')]: vertical,
-      [prefix(bsProps, 'justified')]: justified,
+  const prefix = useBootstrapPrefix(bsPrefix, 'btn-group');
+  let baseClass = prefix;
 
-      // this is annoying, since the class is `btn-block` not `btn-group-block`
-      [prefix(Button.defaultProps, 'block')]: block,
-    };
+  if (vertical) baseClass = `${prefix}-vertical`;
 
-    return (
-      <div
-        {...elementProps}
-        className={classNames(className, classes)}
-      />
-    );
-  }
-}
+  return (
+    <Component
+      {...rest}
+      ref={ref}
+      className={classNames(
+        className,
+        baseClass,
+        size && `${prefix}-${size}`,
+        toggle && `${prefix}-toggle`,
+      )}
+    />
+  );
+});
 
+ButtonGroup.displayName = 'ButtonGroup';
 ButtonGroup.propTypes = propTypes;
 ButtonGroup.defaultProps = defaultProps;
 
-export default bsClass('btn-group', ButtonGroup);
+export default ButtonGroup;

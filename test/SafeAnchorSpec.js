@@ -7,8 +7,7 @@ describe('SafeAnchor', () => {
   it('renders an anchor tag', () => {
     mount(<SafeAnchor />)
       .getDOMNode()
-      .tagName
-      .should.equal('A');
+      .tagName.should.equal('A');
   });
 
   it('forwards provided href', () => {
@@ -21,8 +20,7 @@ describe('SafeAnchor', () => {
   it('ensures that an href is provided', () => {
     mount(<SafeAnchor />)
       .getDOMNode()
-      .hasAttribute('href')
-      .should.be.true;
+      .hasAttribute('href').should.be.true;
   });
 
   it('forwards onClick handler', () => {
@@ -49,9 +47,7 @@ describe('SafeAnchor', () => {
     const handleClick = sinon.spy();
 
     const wrapper = mount(<SafeAnchor onClick={handleClick} />);
-    wrapper
-      .find('a')
-      .simulate('click');
+    wrapper.find('a').simulate('click');
 
     wrapper
       .setProps({ href: '#' })
@@ -82,8 +78,7 @@ describe('SafeAnchor', () => {
       <SafeAnchor disabled href="#foo" onClick={clickSpy}>
         Title
       </SafeAnchor>,
-    )
-      .simulate('click');
+    ).simulate('click');
 
     expect(spy).to.have.been.calledOnce;
     expect(clickSpy).to.have.not.been.called;
@@ -123,5 +118,9 @@ describe('SafeAnchor', () => {
         .find('a')
         .prop('role'),
     ).to.not.exist;
+  });
+
+  it('Should have a as default component', () => {
+    mount(<SafeAnchor />).assertSingle('a');
   });
 });

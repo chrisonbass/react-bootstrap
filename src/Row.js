@@ -1,34 +1,51 @@
 import classNames from 'classnames';
-import React from 'react';
-import elementType from 'prop-types-extra/lib/elementType';
+import PropTypes from 'prop-types';
 
-import { bsClass, getClassSet, splitBsProps } from './utils/bootstrapUtils';
+import React from 'react';
+
+import { useBootstrapPrefix } from './ThemeProvider';
 
 const propTypes = {
-  componentClass: elementType,
+  /**
+   * @default 'row'
+   */
+  bsPrefix: PropTypes.string,
+
+  /** Removes the gutter spacing between `Col`s as well as any added negative margins. */
+  noGutters: PropTypes.bool.isRequired,
+  as: PropTypes.elementType,
 };
 
 const defaultProps = {
-  componentClass: 'div',
+  noGutters: false,
 };
 
-class Row extends React.Component {
-  render() {
-    const { componentClass: Component, className, ...props } = this.props;
-    const [bsProps, elementProps] = splitBsProps(props);
+const Row = React.forwardRef((props, ref) => {
+  const {
+    bsPrefix,
+    noGutters,
+    // Need to define the default "as" during prop destructuring to be compatible with styled-components github.com/react-bootstrap/react-bootstrap/issues/3595
+    as: Component = 'div',
+    className,
+    ...otherProps
+  } = props;
 
-    const classes = getClassSet(bsProps);
+  const decoratedBsPrefix = useBootstrapPrefix(bsPrefix, 'row');
 
-    return (
-      <Component
-        {...elementProps}
-        className={classNames(className, classes)}
-      />
-    );
-  }
-}
+  return (
+    <Component
+      ref={ref}
+      {...otherProps}
+      className={classNames(
+        className,
+        decoratedBsPrefix,
+        noGutters && 'no-gutters',
+      )}
+    />
+  );
+});
 
 Row.propTypes = propTypes;
 Row.defaultProps = defaultProps;
 
-export default bsClass('row', Row);
+export default Row;

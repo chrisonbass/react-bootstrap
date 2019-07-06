@@ -1,19 +1,32 @@
-sudo: false
-
 language: node_js
 node_js:
   - stable
 
-env:
-  - BROWSER=ChromeCi
-  - BROWSER=Firefox
+cache:
+  directories:
+    - ~/.yarn-cache
+    - node_modules
+    - www/node_modules
 
-cache: yarn
+jobs:
+  include:
+    - stage: Chrome
+      env: BROWSER=ChromeCi
+      addons:
+        chrome: stable
+    - stage: Firefox
+      env: BROWSER=Firefox
+      addons:
+        firefox: latest
+
+services:
+  - xvfb
 
 before_install:
-  - export CHROME_BIN=chromium-browser
   - export DISPLAY=:99.0
-  - sh -e /etc/init.d/xvfb start
+
+install:
+  - yarn bootstrap
 
 after_success:
   - node_modules/.bin/codecov

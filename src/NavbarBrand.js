@@ -2,37 +2,40 @@ import classNames from 'classnames';
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { prefix } from './utils/bootstrapUtils';
+import { useBootstrapPrefix } from './ThemeProvider';
 
-const contextTypes = {
-  $bs_navbar: PropTypes.shape({
-    bsClass: PropTypes.string,
-  }),
+const propTypes = {
+  /** @default 'navbar' */
+  bsPrefix: PropTypes.string,
+
+  /**
+   * An href, when provided the Brand will render as an `<a>` element (unless `as` is provided).
+   */
+  href: PropTypes.string,
+
+  /**
+   * Set a custom element for this component.
+   */
+  as: PropTypes.elementType,
 };
 
-class NavbarBrand extends React.Component {
-  render() {
-    const { className, children, ...props } = this.props;
-    const navbarProps = this.context.$bs_navbar || { bsClass: 'navbar' };
+const NavbarBrand = React.forwardRef(
+  ({ bsPrefix, className, as, ...props }, ref) => {
+    bsPrefix = useBootstrapPrefix(bsPrefix, 'navbar-brand');
 
-    const bsClassName = prefix(navbarProps, 'brand');
-
-    if (React.isValidElement(children)) {
-      return React.cloneElement(children, {
-        className: classNames(
-          children.props.className, className, bsClassName,
-        ),
-      });
-    }
+    const Component = as || (props.href ? 'a' : 'span');
 
     return (
-      <span {...props} className={classNames(className, bsClassName)}>
-        {children}
-      </span>
+      <Component
+        {...props}
+        ref={ref}
+        className={classNames(className, bsPrefix)}
+      />
     );
-  }
-}
+  },
+);
 
-NavbarBrand.contextTypes = contextTypes;
+NavbarBrand.displayName = 'NavbarBrand';
+NavbarBrand.propTypes = propTypes;
 
 export default NavbarBrand;

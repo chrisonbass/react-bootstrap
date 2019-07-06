@@ -1,14 +1,17 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+
 import requiredForA11y from 'prop-types-extra/lib/isRequiredForA11y';
-import uncontrollable from 'uncontrollable';
+import { uncontrollable } from 'uncontrollable';
 
 import Nav from './Nav';
+import NavLink from './NavLink';
 import NavItem from './NavItem';
 import UncontrolledTabContainer from './TabContainer';
 import TabContent from './TabContent';
-import { bsClass as setBsClass } from './utils/bootstrapUtils';
-import ValidComponentChildren from './utils/ValidComponentChildren';
+import TabPane from './TabPane';
+
+import { forEach, map } from './utils/ElementChildren';
 
 const TabContainer = UncontrolledTabContainer.ControlledComponent;
 
@@ -22,14 +25,31 @@ const propTypes = {
 
   /**
    * Navigation style
+   *
+   * @type {('tabs'| 'pills')}
    */
-  bsStyle: PropTypes.oneOf(['tabs', 'pills']),
+  variant: PropTypes.string,
 
-  animation: PropTypes.bool,
+  /**
+   * Sets a default animation strategy for all children `<TabPane>`s. Use
+   * `false` to disable, `true` to enable the default `<Fade>` animation or
+   * a react-transition-group v2 `<Transition/>` component.
+   *
+   * @type {Transition | false}
+   * @default {Fade}
+   */
+  transition: PropTypes.oneOfType([
+    PropTypes.oneOf([false]),
+    PropTypes.elementType,
+  ]),
 
-  id: requiredForA11y(PropTypes.oneOfType([
-    PropTypes.string, PropTypes.number,
-  ])),
+  /**
+   * HTML id attribute, required if no `generateChildId` prop
+   * is specified.
+   *
+   * @type {string}
+   */
+  id: requiredForA11y(PropTypes.string),
 
   /**
    * Callback fired when a Tab is selected.
@@ -57,15 +77,14 @@ const propTypes = {
 };
 
 const defaultProps = {
-  bsStyle: 'tabs',
-  animation: true,
+  variant: 'tabs',
   mountOnEnter: false,
   unmountOnExit: false,
 };
 
 function getDefaultActiveKey(children) {
   let defaultActiveKey;
-  ValidComponentChildren.forEach(children, (child) => {
+  forEach(children, child => {
     if (defaultActiveKey == null) {
       defaultActiveKey = child.props.eventKey;
     }
@@ -83,6 +102,7 @@ class Tabs extends React.Component {
 
     return (
       <NavItem
+        as={NavLink}
         eventKey={eventKey}
         disabled={disabled}
         className={tabClassName}
@@ -96,12 +116,9 @@ class Tabs extends React.Component {
     const {
       id,
       onSelect,
-      animation,
+      transition,
       mountOnEnter,
       unmountOnExit,
-      bsClass,
-      className,
-      style,
       children,
       activeKey = getDefaultActiveKey(children),
       ...props
@@ -112,26 +129,24 @@ class Tabs extends React.Component {
         id={id}
         activeKey={activeKey}
         onSelect={onSelect}
-        className={className}
-        style={style}
+        transition={transition}
+        mountOnEnter={mountOnEnter}
+        unmountOnExit={unmountOnExit}
       >
-        <div>
-          <Nav
-            {...props}
-            role="tablist"
-          >
-            {ValidComponentChildren.map(children, this.renderTab)}
-          </Nav>
+        <Nav {...props} role="tablist" as="nav">
+          {map(children, this.renderTab)}
+        </Nav>
 
-          <TabContent
-            bsClass={bsClass}
-            animation={animation}
-            mountOnEnter={mountOnEnter}
-            unmountOnExit={unmountOnExit}
-          >
-            {children}
-          </TabContent>
-        </div>
+        <TabContent>
+          {map(children, child => {
+            const childProps = { ...child.props };
+            delete childProps.title;
+            delete childProps.disabled;
+            delete childProps.tabClassName;
+
+            return <TabPane {...childProps} />;
+          })}
+        </TabContent>
       </TabContainer>
     );
   }
@@ -140,6 +155,6 @@ class Tabs extends React.Component {
 Tabs.propTypes = propTypes;
 Tabs.defaultProps = defaultProps;
 
-setBsClass('tab', Tabs);
-
-export default uncontrollable(Tabs, { activeKey: 'onSelect' });
+export default uncontrollable(Tabs, {
+  activeKey: 'onSelect',
+});

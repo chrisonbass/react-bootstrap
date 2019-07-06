@@ -1,96 +1,139 @@
 import classNames from 'classnames';
-import React from 'react';
+import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
-import elementType from 'prop-types-extra/lib/elementType';
+
 import warning from 'warning';
 
-import FormControlFeedback from './FormControlFeedback';
-import FormControlStatic from './FormControlStatic';
-import { prefix, bsClass, getClassSet, splitBsProps, bsSizes } from './utils/bootstrapUtils';
-import { SIZE_MAP, Size } from './utils/StyleConfig';
+import Feedback from './Feedback';
+import FormContext from './FormContext';
+import { useBootstrapPrefix } from './ThemeProvider';
 
 const propTypes = {
-  componentClass: elementType,
   /**
-   * Only relevant if `componentClass` is `'input'`.
+   * @default {'form-control'}
+   */
+  bsPrefix: PropTypes.string,
+
+  /**
+   * The FormControl `ref` will be forwarded to the underlying input element,
+   * which means unless `as` is a composite component,
+   * it will be a DOM node, when resolved.
+   *
+   * @type {ReactRef}
+   * @alias ref
+   */
+  _ref: PropTypes.any,
+  /**
+   * Input size variants
+   *
+   * @type {('sm'|'lg')}
+   */
+  size: PropTypes.string,
+
+  /**
+   * The underlying HTML element to use when rendering the FormControl.
+   *
+   * @type {('input'|'textarea'|elementType)}
+   */
+  as: PropTypes.elementType,
+
+  /**
+   * Render the input as plain text. Generally used along side `readOnly`.
+   */
+  plaintext: PropTypes.bool,
+
+  /** Make the control readonly */
+  readOnly: PropTypes.bool,
+
+  /** Make the control disabled */
+  disabled: PropTypes.bool,
+
+  /**
+   * The `value` attribute of underlying input
+   *
+   * @controllable onChange
+   * */
+  value: PropTypes.string,
+
+  /** A callback fired when the `value` prop changes */
+  onChange: PropTypes.func,
+
+  /**
+   * The HTML input `type`, which is only relevant if `as` is `'input'` (the default).
    */
   type: PropTypes.string,
+
   /**
    * Uses `controlId` from `<FormGroup>` if not explicitly specified.
    */
   id: PropTypes.string,
-  /**
-   * Attaches a ref to the `<input>` element. Only functions can be used here.
-   *
-   * ```js
-   * <FormControl inputRef={ref => { this.input = ref; }} />
-   * ```
-   */
-  inputRef: PropTypes.func,
+
+  /** Add "valid" validation styles to the control */
+  isValid: PropTypes.bool,
+
+  /** Add "invalid" validation styles to the control and accompanying label */
+  isInvalid: PropTypes.bool,
 };
 
-const defaultProps = {
-  componentClass: 'input',
-};
-
-const contextTypes = {
-  $bs_formGroup: PropTypes.object,
-};
-
-class FormControl extends React.Component {
-  render() {
-    const formGroup = this.context.$bs_formGroup;
-    const controlId = formGroup && formGroup.controlId;
-
-    const {
-      componentClass: Component,
+const FormControl = React.forwardRef(
+  (
+    {
+      bsPrefix,
       type,
-      id = controlId,
-      inputRef,
+      size,
+      id,
       className,
-      bsSize,
+      isValid,
+      isInvalid,
+      plaintext,
+      readOnly,
+      // Need to define the default "as" during prop destructuring to be compatible with styled-components github.com/react-bootstrap/react-bootstrap/issues/3595
+      as: Component = 'input',
       ...props
-    } = this.props;
+    },
+    ref,
+  ) => {
+    const { controlId } = useContext(FormContext);
 
-    const [bsProps, elementProps] = splitBsProps(props);
+    bsPrefix = useBootstrapPrefix(bsPrefix, 'form-control');
+    let classes;
+    if (plaintext) {
+      classes = { [`${bsPrefix}-plaintext`]: true };
+    } else if (type === 'file') {
+      classes = { [`${bsPrefix}-file`]: true };
+    } else {
+      classes = {
+        [bsPrefix]: true,
+        [`${bsPrefix}-${size}`]: size,
+      };
+    }
 
     warning(
-      controlId == null || id === controlId,
+      controlId == null || !id,
       '`controlId` is ignored on `<FormControl>` when `id` is specified.',
     );
 
-    // input[type="file"] should not have .form-control.
-    let classes;
-    if (type !== 'file') {
-      classes = getClassSet(bsProps);
-    }
-
-    // If user provides a size, make sure to append it to classes as input-
-    // e.g. if bsSize is small, it will append input-sm
-    if (bsSize) {
-      const size = SIZE_MAP[bsSize] || bsSize;
-      classes[prefix({ bsClass: 'input' }, size)] = true;
-    }
-
     return (
       <Component
-        {...elementProps}
+        {...props}
         type={type}
-        id={id}
-        ref={inputRef}
-        className={classNames(className, classes)}
+        ref={ref}
+        readOnly={readOnly}
+        id={id || controlId}
+        className={classNames(
+          className,
+          classes,
+          isValid && `is-valid`,
+          isInvalid && `is-invalid`,
+        )}
       />
     );
-  }
-}
-
-FormControl.propTypes = propTypes;
-FormControl.defaultProps = defaultProps;
-FormControl.contextTypes = contextTypes;
-
-FormControl.Feedback = FormControlFeedback;
-FormControl.Static = FormControlStatic;
-
-export default bsClass('form-control',
-  bsSizes([Size.SMALL, Size.LARGE], FormControl),
+  },
 );
+
+FormControl.displayName = 'FormControl';
+FormControl.propTypes = propTypes;
+
+FormControl.Feedback = Feedback;
+
+export default FormControl;

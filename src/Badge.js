@@ -1,60 +1,51 @@
+import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import React from 'react';
-import PropTypes from 'prop-types';
 
-import { bsClass, getClassSet, splitBsProps } from './utils/bootstrapUtils';
-
-// TODO: `pullRight` doesn't belong here. There's no special handling here.
+import { useBootstrapPrefix } from './ThemeProvider';
 
 const propTypes = {
-  pullRight: PropTypes.bool,
+  /** @default 'badge' */
+  bsPrefix: PropTypes.string,
+
+  /**
+   * The visual style of the badge
+   *
+   * @type {('primary'|'secondary'|'success'|'danger'|'warning'|'info'|'light'|'dark')}
+   */
+  variant: PropTypes.string,
+
+  /**
+   * Add the `pill` modifier to make badges more rounded with
+   * some additional horizontal padding
+   */
+  pill: PropTypes.bool.isRequired,
 };
 
 const defaultProps = {
-  pullRight: false,
+  pill: false,
 };
 
-class Badge extends React.Component {
-  hasContent(children) {
-    let result = false;
-
-    React.Children.forEach(children, (child) => {
-      if (result) {
-        return;
-      }
-
-      if (child || child === 0) {
-        result = true;
-      }
-    });
-
-    return result;
-  }
-
-  render() {
-    const { pullRight, className, children, ...props } = this.props;
-    const [bsProps, elementProps] = splitBsProps(props);
-
-    const classes = {
-      ...getClassSet(bsProps),
-      'pull-right': pullRight,
-
-      // Hack for collapsing on IE8.
-      hidden: !this.hasContent(children),
-    };
-
+const Badge = React.forwardRef(
+  ({ bsPrefix, variant, pill, className, ...props }, ref) => {
+    const prefix = useBootstrapPrefix(bsPrefix, 'badge');
     return (
       <span
-        {...elementProps}
-        className={classNames(className, classes)}
-      >
-        {children}
-      </span>
+        ref={ref}
+        {...props}
+        className={classNames(
+          className,
+          prefix,
+          pill && `${prefix}-pill`,
+          variant && `${prefix}-${variant}`,
+        )}
+      />
     );
-  }
-}
+  },
+);
 
+Badge.displayName = 'Badge';
 Badge.propTypes = propTypes;
 Badge.defaultProps = defaultProps;
 
-export default bsClass('badge', Badge);
+export default Badge;

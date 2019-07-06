@@ -1,10 +1,10 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import invariant from 'invariant';
-import uncontrollable from 'uncontrollable';
+import { uncontrollable } from 'uncontrollable';
 
 import chainFunction from './utils/createChainedFunction';
-import ValidChildren from './utils/ValidComponentChildren';
+import { map } from './utils/ElementChildren';
 import ButtonGroup from './ButtonGroup';
 import ToggleButton from './ToggleButton';
 
@@ -49,44 +49,42 @@ class ToggleButtonGroup extends React.Component {
     return value == null ? [] : [].concat(value);
   }
 
-  handleToggle(value) {
+  handleToggle(value, event) {
     const { type, onChange } = this.props;
     const values = this.getValues();
     const isActive = values.indexOf(value) !== -1;
 
     if (type === 'radio') {
-      if (!isActive) {
-        onChange(value);
-      }
+      if (!isActive) onChange(value, event);
       return;
     }
 
     if (isActive) {
-      onChange(values.filter(n => n !== value));
+      onChange(values.filter(n => n !== value), event);
     } else {
-      onChange([...values, value]);
+      onChange([...values, value], event);
     }
   }
 
   render() {
     const { children, type, name, ...props } = this.props;
 
-    const values = this.getValues();
-
-    invariant(type !== 'radio' || !!name,
-      'A `name` is required to group the toggle buttons when the `type` ' +
-      'is set to "radio"',
-    );
-
     delete props.onChange;
     delete props.value;
 
-    // the data attribute is required b/c twbs css uses it in the selector
+    const values = this.getValues();
+
+    invariant(
+      type !== 'radio' || !!name,
+      'A `name` is required to group the toggle buttons when the `type` ' +
+        'is set to "radio"',
+    );
+
     return (
-      <ButtonGroup {...props} data-toggle="buttons">
-        {ValidChildren.map(children, (child) => {
+      <ButtonGroup {...props} toggle>
+        {map(children, child => {
           const { value, onChange } = child.props;
-          const handler = () => this.handleToggle(value);
+          const handler = e => this.handleToggle(value, e);
 
           return React.cloneElement(child, {
             type,

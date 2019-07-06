@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import elementType from 'prop-types-extra/lib/elementType';
 
 import createChainedFunction from './utils/createChainedFunction';
 
@@ -10,17 +9,15 @@ const propTypes = {
   onKeyDown: PropTypes.func,
   disabled: PropTypes.bool,
   role: PropTypes.string,
-  tabIndex: PropTypes.oneOfType([
-    PropTypes.number, PropTypes.string,
-  ]),
+  tabIndex: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+
   /**
    * this is sort of silly but needed for Button
    */
-  componentClass: elementType,
-};
+  as: PropTypes.elementType,
 
-const defaultProps = {
-  componentClass: 'a',
+  /** @private */
+  innerRef: PropTypes.any,
 };
 
 function isTrivialHref(href) {
@@ -32,7 +29,7 @@ function isTrivialHref(href) {
  * an anchor tag is needed, when semantically a button tag is the
  * better choice. SafeAnchor ensures that when an anchor is used like a
  * button its accessible. It also emulates input `disabled` behavior for
- * links, which is usually desirable for Buttons, NavItems, MenuItems, etc.
+ * links, which is usually desirable for Buttons, NavItems, DropdownItems, etc.
  */
 class SafeAnchor extends React.Component {
   constructor(props, context) {
@@ -67,7 +64,14 @@ class SafeAnchor extends React.Component {
   }
 
   render() {
-    const { componentClass: Component, disabled, onKeyDown, ...props } = this.props;
+    const {
+      // Need to define the default "as" during prop destructuring to be compatible with styled-components github.com/react-bootstrap/react-bootstrap/issues/3595
+      as: Component = 'a',
+      disabled,
+      onKeyDown,
+      innerRef,
+      ...props
+    } = this.props;
 
     if (isTrivialHref(props.href)) {
       props.role = props.role || 'button';
@@ -78,9 +82,9 @@ class SafeAnchor extends React.Component {
 
     if (disabled) {
       props.tabIndex = -1;
-      props.style = { pointerEvents: 'none', ...props.style };
+      props['aria-disabled'] = true;
     }
-
+    if (innerRef) props.ref = innerRef;
     return (
       <Component
         {...props}
@@ -92,6 +96,5 @@ class SafeAnchor extends React.Component {
 }
 
 SafeAnchor.propTypes = propTypes;
-SafeAnchor.defaultProps = defaultProps;
 
 export default SafeAnchor;

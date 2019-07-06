@@ -3,10 +3,16 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import SafeAnchor from './SafeAnchor';
+import { useBootstrapPrefix } from './ThemeProvider';
 
 const propTypes = {
   /**
-   * If set to true, renders `span` instead of `a`
+   * @default 'breadcrumb-item'
+   */
+  bsPrefix: PropTypes.string,
+  /**
+   * Adds a visual "active" state to a Breadcrumb
+   * Item and disables the link.
    */
   active: PropTypes.bool,
   /**
@@ -21,30 +27,39 @@ const propTypes = {
    * `target` attribute for the inner `a` element
    */
   target: PropTypes.string,
+
+  as: PropTypes.elementType,
 };
 
 const defaultProps = {
   active: false,
 };
 
-class BreadcrumbItem extends React.Component {
-  render() {
-    const { active, href, title, target, className, ...props } = this.props;
+const BreadcrumbItem = React.forwardRef(
+  // Need to define the default "as" during prop destructuring to be compatible with styled-components github.com/react-bootstrap/react-bootstrap/issues/3595
+  ({ bsPrefix, active, className, as: Component = 'li', ...props }, ref) => {
+    const prefix = useBootstrapPrefix(bsPrefix, 'breadcrumb-item');
 
-    // Don't try to render these props on non-active <span>.
+    const { href, title, target, ...elementProps } = props;
     const linkProps = { href, title, target };
 
     return (
-      <li className={classNames(className, { active })}>
-        {active ?
-          <span {...props} /> :
-          <SafeAnchor {...props} {...linkProps} />
-        }
-      </li>
+      <Component
+        ref={ref}
+        className={classNames(prefix, className, { active })}
+        aria-current={active ? 'page' : undefined}
+      >
+        {active ? (
+          <span {...elementProps} className={classNames({ active })} />
+        ) : (
+          <SafeAnchor {...elementProps} {...linkProps} />
+        )}
+      </Component>
     );
-  }
-}
+  },
+);
 
+BreadcrumbItem.displayName = 'BreadcrumbItem';
 BreadcrumbItem.propTypes = propTypes;
 BreadcrumbItem.defaultProps = defaultProps;
 

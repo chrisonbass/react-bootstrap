@@ -1,10 +1,6 @@
-require('babel-register');
+const { DefinePlugin } = require('webpack');
 
-const webpack = require('webpack');
-
-const webpackConfigBase = require('./webpack/base.config').default;
-
-module.exports = (config) => {
+module.exports = config => {
   const { env } = process;
 
   config.set({
@@ -16,16 +12,31 @@ module.exports = (config) => {
       'test/index.js': ['webpack', 'sourcemap'],
     },
 
-    // This explicitly doesn't use webpack-merge because we want to override
-    // the DefinePlugin in the base config.
-    webpack: Object.assign({}, webpackConfigBase, {
+    webpack: {
+      mode: 'development',
+      module: {
+        rules: [
+          {
+            test: /\.js$/,
+            exclude: /node_modules/,
+            use: {
+              loader: 'babel-loader',
+              options: {
+                cacheDirectory: true,
+                envName: 'test',
+              },
+            },
+          },
+        ],
+      },
       plugins: [
-        new webpack.DefinePlugin({
+        new DefinePlugin({
           'process.env.NODE_ENV': JSON.stringify('test'),
         }),
       ],
       devtool: 'cheap-module-inline-source-map',
-    }),
+      stats: 'minimal',
+    },
 
     webpackMiddleware: {
       noInfo: true,

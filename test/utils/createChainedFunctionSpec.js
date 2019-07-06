@@ -16,9 +16,7 @@ describe('createChainedFunction', () => {
     const func2 = sinon.stub();
     const chained = createChainedFunction(func1, func2);
 
-    chained
-      .should.not.equal(func1)
-      .and.should.not.equal(func2);
+    chained.should.not.equal(func1).and.should.not.equal(func2);
 
     func1.should.not.have.been.called;
     func2.should.not.have.been.called;

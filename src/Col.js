@@ -1,221 +1,119 @@
 import classNames from 'classnames';
 import React from 'react';
 import PropTypes from 'prop-types';
-import elementType from 'prop-types-extra/lib/elementType';
 
-import { bsClass, prefix, splitBsProps } from './utils/bootstrapUtils';
-import { DEVICE_SIZES } from './utils/StyleConfig';
+import { useBootstrapPrefix } from './ThemeProvider';
+
+const DEVICE_SIZES = ['xl', 'lg', 'md', 'sm', 'xs'];
+const colSize = PropTypes.oneOfType([
+  PropTypes.bool,
+  PropTypes.number,
+  PropTypes.string,
+  PropTypes.oneOf(['auto']),
+]);
+
+const stringOrNumber = PropTypes.oneOfType([
+  PropTypes.number,
+  PropTypes.string,
+]);
+
+const column = PropTypes.oneOfType([
+  colSize,
+  PropTypes.shape({
+    size: colSize,
+    order: stringOrNumber,
+    offset: stringOrNumber,
+  }),
+]);
 
 const propTypes = {
-  componentClass: elementType,
+  /**
+   * @default 'col'
+   */
+  bsPrefix: PropTypes.string,
+
+  as: PropTypes.elementType,
 
   /**
-   * The number of columns you wish to span
+   * The number of columns to span on sxtra small devices (<576px)
    *
-   * for Extra small devices Phones (<768px)
-   *
-   * class-prefix `col-xs-`
+   * @type {(true|"auto"|number|{ span: true|"auto"|number, offset: number, order: number })}
    */
-  xs: PropTypes.number,
+  xs: column,
+
   /**
-   * The number of columns you wish to span
+   * The number of columns to span on small devices (≥576px)
    *
-   * for Small devices Tablets (≥768px)
-   *
-   * class-prefix `col-sm-`
+   * @type {(true|"auto"|number|{ span: true|"auto"|number, offset: number, order: number })}
    */
-  sm: PropTypes.number,
+  sm: column,
+
   /**
-   * The number of columns you wish to span
+   * The number of columns to span on medium devices (≥768px)
    *
-   * for Medium devices Desktops (≥992px)
-   *
-   * class-prefix `col-md-`
+   * @type {(true|"auto"|number|{ span: true|"auto"|number, offset: number, order: number })}
    */
-  md: PropTypes.number,
+  md: column,
+
   /**
-   * The number of columns you wish to span
+   * The number of columns to span on large devices (≥992px)
    *
-   * for Large devices Desktops (≥1200px)
-   *
-   * class-prefix `col-lg-`
+   * @type {(true|"auto"|number|{ span: true|"auto"|number, offset: number, order: number })}
    */
-  lg: PropTypes.number,
+  lg: column,
+
   /**
-   * Hide column
+   * The number of columns to span on extra large devices (≥1200px)
    *
-   * on Extra small devices Phones
-   *
-   * adds class `hidden-xs`
+   * @type {(true|"auto"|number|{ span: true|"auto"|number, offset: number, order: number })}
    */
-  xsHidden: PropTypes.bool,
-  /**
-   * Hide column
-   *
-   * on Small devices Tablets
-   *
-   * adds class `hidden-sm`
-   */
-  smHidden: PropTypes.bool,
-  /**
-   * Hide column
-   *
-   * on Medium devices Desktops
-   *
-   * adds class `hidden-md`
-   */
-  mdHidden: PropTypes.bool,
-  /**
-   * Hide column
-   *
-   * on Large devices Desktops
-   *
-   * adds class `hidden-lg`
-   */
-  lgHidden: PropTypes.bool,
-  /**
-   * Move columns to the right
-   *
-   * for Extra small devices Phones
-   *
-   * class-prefix `col-xs-offset-`
-   */
-  xsOffset: PropTypes.number,
-  /**
-   * Move columns to the right
-   *
-   * for Small devices Tablets
-   *
-   * class-prefix `col-sm-offset-`
-   */
-  smOffset: PropTypes.number,
-  /**
-   * Move columns to the right
-   *
-   * for Medium devices Desktops
-   *
-   * class-prefix `col-md-offset-`
-   */
-  mdOffset: PropTypes.number,
-  /**
-   * Move columns to the right
-   *
-   * for Large devices Desktops
-   *
-   * class-prefix `col-lg-offset-`
-   */
-  lgOffset: PropTypes.number,
-  /**
-   * Change the order of grid columns to the right
-   *
-   * for Extra small devices Phones
-   *
-   * class-prefix `col-xs-push-`
-   */
-  xsPush: PropTypes.number,
-  /**
-   * Change the order of grid columns to the right
-   *
-   * for Small devices Tablets
-   *
-   * class-prefix `col-sm-push-`
-   */
-  smPush: PropTypes.number,
-  /**
-   * Change the order of grid columns to the right
-   *
-   * for Medium devices Desktops
-   *
-   * class-prefix `col-md-push-`
-   */
-  mdPush: PropTypes.number,
-  /**
-   * Change the order of grid columns to the right
-   *
-   * for Large devices Desktops
-   *
-   * class-prefix `col-lg-push-`
-   */
-  lgPush: PropTypes.number,
-  /**
-   * Change the order of grid columns to the left
-   *
-   * for Extra small devices Phones
-   *
-   * class-prefix `col-xs-pull-`
-   */
-  xsPull: PropTypes.number,
-  /**
-   * Change the order of grid columns to the left
-   *
-   * for Small devices Tablets
-   *
-   * class-prefix `col-sm-pull-`
-   */
-  smPull: PropTypes.number,
-  /**
-   * Change the order of grid columns to the left
-   *
-   * for Medium devices Desktops
-   *
-   * class-prefix `col-md-pull-`
-   */
-  mdPull: PropTypes.number,
-  /**
-   * Change the order of grid columns to the left
-   *
-   * for Large devices Desktops
-   *
-   * class-prefix `col-lg-pull-`
-   */
-  lgPull: PropTypes.number,
+  xl: column,
 };
 
-const defaultProps = {
-  componentClass: 'div',
-};
-
-class Col extends React.Component {
-  render() {
-    const { componentClass: Component, className, ...props } = this.props;
-    const [bsProps, elementProps] = splitBsProps(props);
-
+const Col = React.forwardRef(
+  // Need to define the default "as" during prop destructuring to be compatible with styled-components github.com/react-bootstrap/react-bootstrap/issues/3595
+  ({ bsPrefix, className, as: Component = 'div', ...props }, ref) => {
+    const prefix = useBootstrapPrefix(bsPrefix, 'col');
+    const spans = [];
     const classes = [];
 
-    DEVICE_SIZES.forEach((size) => {
-      function popProp(propSuffix, modifier) {
-        const propName = `${size}${propSuffix}`;
-        const propValue = elementProps[propName];
+    DEVICE_SIZES.forEach(brkPoint => {
+      let propValue = props[brkPoint];
+      delete props[brkPoint];
 
-        if (propValue != null) {
-          classes.push(prefix(bsProps, `${size}${modifier}-${propValue}`));
-        }
-
-        delete elementProps[propName];
+      let span, offset, order;
+      if (propValue != null && typeof propValue === 'object') {
+        ({ span = true, offset, order } = propValue);
+      } else {
+        span = propValue;
       }
 
-      popProp('', '');
-      popProp('Offset', '-offset');
-      popProp('Push', '-push');
-      popProp('Pull', '-pull');
+      let infix = brkPoint !== 'xs' ? `-${brkPoint}` : '';
 
-      const hiddenPropName = `${size}Hidden`;
-      if (elementProps[hiddenPropName]) {
-        classes.push(`hidden-${size}`);
-      }
-      delete elementProps[hiddenPropName];
+      if (span != null)
+        spans.push(
+          span === true ? `${prefix}${infix}` : `${prefix}${infix}-${span}`,
+        );
+
+      if (order != null) classes.push(`order${infix}-${order}`);
+      if (offset != null) classes.push(`offset${infix}-${offset}`);
     });
+
+    if (!spans.length) {
+      spans.push(prefix); // plain 'col'
+    }
 
     return (
       <Component
-        {...elementProps}
-        className={classNames(className, classes)}
+        {...props}
+        ref={ref}
+        className={classNames(className, ...spans, ...classes)}
       />
     );
-  }
-}
+  },
+);
 
+Col.displayName = 'Col';
 Col.propTypes = propTypes;
-Col.defaultProps = defaultProps;
 
-export default bsClass('col', Col);
+export default Col;

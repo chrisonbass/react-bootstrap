@@ -1,52 +1,86 @@
 import classNames from 'classnames';
 import React from 'react';
 import PropTypes from 'prop-types';
-import elementType from 'prop-types-extra/lib/elementType';
 
-import { bsClass, prefix, splitBsProps } from './utils/bootstrapUtils';
+import createWithBsPrefix from './utils/createWithBsPrefix';
+import { useBootstrapPrefix } from './ThemeProvider';
+import FormGroup from './FormGroup';
+import FormControl from './FormControl';
+import FormCheck from './FormCheck';
+import FormLabel from './FormLabel';
+import FormText from './FormText';
 
 const propTypes = {
-  horizontal: PropTypes.bool,
+  /**
+   * @default {'form'}
+   */
+  bsPrefix: PropTypes.string,
+
+  /**
+   * The Form `ref` will be forwarded to the underlying element,
+   * which means, unless it's rendered `as` a composite component,
+   * it will be a DOM node, when resolved.
+   *
+   * @type {ReactRef}
+   * @alias ref
+   */
+  _ref: PropTypes.any,
+
+  /**
+   * Display the series of labels, form controls,
+   * and buttons on a single horizontal row
+   */
   inline: PropTypes.bool,
-  componentClass: elementType,
+
+  /**
+   * Mark a form as having been validated. Setting it to `true` will
+   * toggle any validation styles on the forms elements.
+   */
+  validated: PropTypes.bool,
+  as: PropTypes.elementType,
 };
 
 const defaultProps = {
-  horizontal: false,
   inline: false,
-  componentClass: 'form',
 };
 
-class Form extends React.Component {
-  render() {
-    const {
-      horizontal,
+const Form = React.forwardRef(
+  (
+    {
+      bsPrefix,
       inline,
-      componentClass: Component,
       className,
+      validated,
+      // Need to define the default "as" during prop destructuring to be compatible with styled-components github.com/react-bootstrap/react-bootstrap/issues/3595
+      as: Component = 'form',
       ...props
-    } = this.props;
-
-    const [bsProps, elementProps] = splitBsProps(props);
-
-    const classes = [];
-    if (horizontal) {
-      classes.push(prefix(bsProps, 'horizontal'));
-    }
-    if (inline) {
-      classes.push(prefix(bsProps, 'inline'));
-    }
-
+    },
+    ref,
+  ) => {
+    bsPrefix = useBootstrapPrefix(bsPrefix, 'form');
     return (
       <Component
-        {...elementProps}
-        className={classNames(className, classes)}
+        {...props}
+        ref={ref}
+        className={classNames(
+          className,
+          validated && 'was-validated',
+          inline && `${bsPrefix}-inline`,
+        )}
       />
     );
-  }
-}
+  },
+);
 
+Form.displayName = 'Form';
 Form.propTypes = propTypes;
 Form.defaultProps = defaultProps;
 
-export default bsClass('form', Form);
+Form.Row = createWithBsPrefix('form-row');
+Form.Group = FormGroup;
+Form.Control = FormControl;
+Form.Check = FormCheck;
+Form.Label = FormLabel;
+Form.Text = FormText;
+
+export default Form;

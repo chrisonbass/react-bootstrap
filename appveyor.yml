@@ -1,20 +1,21 @@
 version: '{build}'
 
+environment:
+  NODE_VERSION: '8'
 # Install scripts. (runs after repo cloning)
 install:
   # Get the latest stable version of io.js
-  - ps: Install-Product node ''
-  - npm -g install npm@latest
-  - set PATH=%APPDATA%\npm;%PATH%
+  - ps: Install-Product node $env:NODE_VERSION
   - node --version
-  - npm --version
-  - npm install
+  - yarn --version
+  - yarn bootstrap
 
 # No need for MSBuild on this project
 build: off
-
+cache:
+  - "%LOCALAPPDATA%\\Yarn"
 test_script:
-  - npm test
+  - yarn test
 
 branches:
   only:

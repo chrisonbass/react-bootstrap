@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React from 'react';
+import classNames from 'classnames';
 
 const propTypes = {
   label: PropTypes.string.isRequired,
@@ -10,6 +11,7 @@ const defaultProps = {
   label: 'Close',
 };
 
+<<<<<<< HEAD
 class CloseButton extends React.Component {
   render() {
     const { label, onClick } = this.props;
@@ -25,7 +27,24 @@ class CloseButton extends React.Component {
     );
   }
 }
+=======
+const CloseButton = React.forwardRef(
+  ({ label, onClick, className, ...props }, ref) => (
+    <button
+      ref={ref}
+      type="button"
+      className={classNames('close', className)}
+      onClick={onClick}
+      {...props}
+    >
+      <span aria-hidden="true">&times;</span>
+      <span className="sr-only">{label}</span>
+    </button>
+  ),
+);
+>>>>>>> 49a4563306c967cc6239b53a6a01dd2fa4bb6c64
 
+CloseButton.displayName = 'CloseButton';
 CloseButton.propTypes = propTypes;
 CloseButton.defaultProps = defaultProps;
 
