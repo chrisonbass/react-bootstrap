@@ -19,7 +19,7 @@ class CloseButton extends React.Component {
         className="close"
         onClick={onClick}
       >
-        <span aria-hidden="true">&times;</span>
+        <span aria-hidden="true" className="pi-times"></span>
         <span className="sr-only">{label}</span>
       </button>
     );
